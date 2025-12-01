@@ -9,6 +9,7 @@
     "start": "node dist/server.js",
     "db:init": "tsx src/db/init.ts",
     "test": "tsx tests/integration.test.ts",
+    "test:settlement-options": "tsx tests/settlement-options.test.ts",
     "add-user": "tsx scripts/add-user.ts"
   },
   "keywords": [

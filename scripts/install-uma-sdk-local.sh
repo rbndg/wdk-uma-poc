@@ -56,3 +56,4 @@ echo ""
 echo "To rebuild and reinstall after updates:"
 echo "  ./scripts/install-uma-sdk-local.sh"
 
+

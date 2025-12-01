@@ -201,12 +201,6 @@ export class UmaService {
     }
 
     // Get user's multi-chain addresses
-    const chains = userService.getFormattedAddresses(user.id);
-    
-    // Convert to UMA-compliant settlement options
-    const settlementOptions = this.buildSettlementOptions(chains);
-
-    // Get user's Spark identity pubkey if available
     const userAddresses = userService.getUserAddresses(user.id);
     const sparkAddress = userAddresses.find(addr => addr.chain_name === 'spark');
 
@@ -270,8 +264,6 @@ export class UmaService {
     const response = {
       pr: paymentRequest,
       routes: [],
-      // Settlement options with proper identifiers (USDT_POLYGON, USDT_SOLANA, etc)
-      settlementOptions: settlementOptions.length > 0 ? settlementOptions : undefined,
       // Include settlement info if sender specified their choice (UMA-compliant)
       settlement: settlementInfo,
       disposable: false,
