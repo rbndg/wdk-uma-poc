@@ -305,6 +305,11 @@ class UmaService {
    * Generate Lightning invoice using Spark SDK
    */
   async generateLightningInvoice (amountMsats, description, receiverSparkPubkey) {
+    // Remove 0x prefix if present
+    if (receiverSparkPubkey && receiverSparkPubkey.startsWith('0x')) {
+      receiverSparkPubkey = receiverSparkPubkey.slice(2)
+    }
+
     try {
       const wallet = await this.initializeSparkWallet()
 
