@@ -2,6 +2,7 @@ require('dotenv').config()
 const fastify = require('fastify')({ logger: true })
 const { initializeDatabase } = require('./db/database')
 const { umaService } = require('./services/uma')
+const { domainService } = require('./services/domains')
 
 // Swagger configuration
 fastify.register(require('@fastify/swagger'), {
@@ -157,7 +158,18 @@ fastify.get('/.well-known/lnurlp/:username', {
   try {
     // Case 1: Lookup request (no amount parameter)
     if (!amount) {
-      const lookupResponse = await umaService.generateLookupResponseLegacy(username, BASE_URL)
+      // Extract domain from request hostname
+      const requestDomain = req.hostname.toLowerCase()
+      const domain = await domainService.getDomainByName(requestDomain)
+
+      if (!domain) {
+        return reply.status(404).send({
+          status: 'ERROR',
+          reason: `Domain ${requestDomain} not found`
+        })
+      }
+
+      const lookupResponse = await umaService.generateLookupResponse(username, domain)
 
       if (!lookupResponse) {
         return reply.status(404).send({
@@ -181,8 +193,20 @@ fastify.get('/.well-known/lnurlp/:username', {
       })
     }
 
-    const payResponse = await umaService.generatePayResponseLegacy(
+    // Extract domain from request hostname
+    const requestDomain = req.hostname.toLowerCase()
+    const domain = await domainService.getDomainByName(requestDomain)
+
+    if (!domain) {
+      return reply.status(404).send({
+        status: 'ERROR',
+        reason: `Domain ${requestDomain} not found`
+      })
+    }
+
+    const payResponse = await umaService.generatePayResponse(
       username,
+      domain,
       amountMsats,
       paymentNonce,
       currency,
