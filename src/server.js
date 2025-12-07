@@ -306,7 +306,7 @@ fastify.get('/', {
       health: '/health'
     },
     notes: {
-      authentication: 'None - handled by calling backend',
+      authentication: 'Bearer token required for admin endpoints (API_KEY env var)',
       domains: 'Multi-tenant - each domain has isolated users',
       spark_key: 'Optional for users - required for Lightning invoice generation',
       nonce: 'Optional - auto-generated if not provided',

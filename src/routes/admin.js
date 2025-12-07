@@ -2,13 +2,43 @@ const { domainService } = require('../services/domains')
 const { userService } = require('../services/users')
 
 async function adminRoutes (fastify, options) {
-  // No authentication required - handled by calling backend
+  // Authentication required - Bearer token with API key
+
+  // Authentication middleware
+  async function authenticateAdmin (request, reply) {
+    const authHeader = request.headers.authorization
+
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return reply.status(401).send({
+        error: 'Unauthorized',
+        message: 'Missing or invalid authorization header'
+      })
+    }
+
+    const providedKey = authHeader.substring(7) // Remove 'Bearer ' prefix
+    const API_KEY = process.env.API_KEY
+
+    if (!API_KEY) {
+      return reply.status(500).send({
+        error: 'Server Configuration Error',
+        message: 'API authentication not configured'
+      })
+    }
+
+    if (providedKey !== API_KEY) {
+      return reply.status(403).send({
+        error: 'Forbidden',
+        message: 'Invalid API key'
+      })
+    }
+  }
 
   /**
    * POST /api/admin/domains
    * Register a new domain
    */
   fastify.post('/domains', {
+    preHandler: authenticateAdmin,
     schema: {
       description: 'Register a new domain for UMA addresses',
       tags: ['Admin'],
@@ -128,6 +158,7 @@ async function adminRoutes (fastify, options) {
    * List users for a domain
    */
   fastify.get('/users/:domainId', {
+    preHandler: authenticateAdmin,
     schema: {
       description: 'List all users for a specific domain',
       tags: ['Admin'],
@@ -202,6 +233,7 @@ async function adminRoutes (fastify, options) {
    * Create a user for a domain
    */
   fastify.post('/users/:domainId', {
+    preHandler: authenticateAdmin,
     schema: {
       description: 'Create a new UMA user for a domain',
       tags: ['Admin'],
@@ -349,6 +381,7 @@ async function adminRoutes (fastify, options) {
    * Delete a user from a domain
    */
   fastify.delete('/users/:domainId/:username', {
+    preHandler: authenticateAdmin,
     schema: {
       description: 'Delete a user from a domain',
       tags: ['Admin'],
@@ -424,7 +457,9 @@ async function adminRoutes (fastify, options) {
    * GET /api/admin/domain/:domainId
    * Get domain details
    */
-  fastify.get('/domain/:domainId', async (req, reply) => {
+  fastify.get('/domain/:domainId', {
+    preHandler: authenticateAdmin
+  }, async (req, reply) => {
     try {
       const { domainId } = req.params
       const domain = await domainService.getDomainById(domainId)
@@ -461,7 +496,9 @@ async function adminRoutes (fastify, options) {
    * DELETE /api/admin/domain/:domainId
    * Delete a domain and all its users
    */
-  fastify.delete('/domain/:domainId', async (req, reply) => {
+  fastify.delete('/domain/:domainId', {
+    preHandler: authenticateAdmin
+  }, async (req, reply) => {
     try {
       const { domainId } = req.params
 
