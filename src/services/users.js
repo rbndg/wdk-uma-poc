@@ -55,7 +55,16 @@ class UserService {
    */
   async getUserById (userId) {
     const db = await getDatabase()
-    return await db.collection('users').findOne({ _id: userId })
+    const profile =  await db.collection('users').findOne({ _id: userId })
+    if(!profile) return null
+    const addrs = await db.collection('chain_addresses').find({ user_id : userId }).toArray()
+    return {
+      ...profile, 
+      addresses : addrs.reduce((acc, addrs) => {
+        acc[addrs.chain_name] = addrs
+        return acc
+      }, {})
+    }
   }
 
   /**
@@ -115,6 +124,7 @@ class UserService {
     if (addresses) {
       const addressInserts = []
       for (const [chainName, address] of Object.entries(addresses)) {
+        if(!CHAIN_MAPPING[chainName]) throw new Error('Invalid chain '+chainName)
         if (address && address.trim()) {
           addressInserts.push({
             user_id: userId,
@@ -358,7 +368,6 @@ class UserService {
     const settlementOptions = Object.keys(addresses).map(chain => {
       return CHAIN_MAPPING[chain].layer 
     })
-
     return {
       ...user,
       addresses,
