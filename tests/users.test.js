@@ -579,9 +579,9 @@ test('isValidUsername validates username format', async (t) => {
   t.ok(userServiceInstance.isValidUsername('test-user'), 'Valid username with dash should pass')
   t.ok(userServiceInstance.isValidUsername('a'), 'Single character should pass')
 
-  t.notOk(userServiceInstance.isValidUsername(''), 'Empty string should fail')
-  t.notOk(userServiceInstance.isValidUsername('user with spaces'), 'Username with spaces should fail')
-  t.notOk(userServiceInstance.isValidUsername('user-with-very-long-name-that-exceeds-the-limit-of-sixty-four-characters-in-total-length'), 'Too long username should fail')
+  t.ok(!userServiceInstance.isValidUsername(''), 'Empty string should fail')
+  t.ok(!userServiceInstance.isValidUsername('user with spaces'), 'Username with spaces should fail')
+  t.ok(!userServiceInstance.isValidUsername('user-with-very-long-name-that-exceeds-the-limit-of-sixty-four-characters-in-total-length'), 'Too long username should fail')
 
   t.pass('Username validation works')
 })

@@ -158,25 +158,6 @@ class UserService {
   }
 
   /**
-   * Legacy createUser for backwards compatibility
-   */
-  async createUserLegacy (username, displayName) {
-    const db = await getDatabase()
-    const defaultDomain = await db.collection('domains').findOne({ is_default: true })
-    if (!defaultDomain) {
-      throw new Error('No default domain found')
-    }
-
-    const result = await this.createUser({
-      username,
-      domainId: defaultDomain._id,
-      displayName: displayName || username
-    })
-
-    return result._id
-  }
-
-  /**
    * Update user details
    */
   async updateUser (userId, options) {

@@ -206,17 +206,6 @@ class UmaService {
   }
 
   /**
-   * Legacy lookup (for backwards compatibility with single-domain mode)
-   */
-  async generateLookupResponseLegacy (username, baseUrl) {
-    const defaultDomain = domainService.getDefaultDomain()
-    if (!defaultDomain) {
-      return null
-    }
-    return this.generateLookupResponse(username, defaultDomain)
-  }
-
-  /**
    * Generate UMA pay response (second call - with amount)
    * Multi-tenant aware
    */
@@ -291,31 +280,27 @@ class UmaService {
       console.log(`Payment request using settlement: ${assetIdentifier} on ${settlementLayer}`)
     }
 
-    // Calculate converted field per UMA spec
-    // Formula: invoiceAmount = (amount × multiplier) + fee
-    // Solving for amount: amount = (invoiceAmount - fee) / multiplier
-    const receiverFees = 0 // No receiver fees for now
+    const receiverFees = 0
     const currencyCode = currency || 'USD'
-    const decimals = currencyCode === 'USD' ? 2 : 2 // Default to 2 decimals
+    const decimals = CURRENCIES[currencyCode]?.decimals
 
-    // Determine the settlement asset based on settlement layer
     const asset = (!settlementLayer || settlementLayer === 'ln' || settlementLayer === 'spark')
       ? 'BTC'
       : 'USDT'
 
-    // Get multiplier for the asset - how many smallest units of asset per smallest unit of currency
     const multipliers = await marketRates.calculateMultipliers(asset, [currencyCode])
     const multiplier = multipliers[currencyCode] 
     // Calculate amount in currency units (e.g., cents)
     // amount = (invoiceAmount - fee) / multiplier
-    const amountInCurrencyUnits = Math.round((amountMsats - receiverFees) / multiplier)
+    const amountInCurrencyUnits = BigInt(amountMsats - receiverFees) / BigInt(multiplier)
+
 
     const response = {
       pr: paymentRequest,
       routes: [],
       settlement: settlementInfo,
       converted: {
-        amount: amountInCurrencyUnits,
+        amount: amountInCurrencyUnits.toString(),
         currencyCode,
         decimals,
         multiplier,
@@ -331,24 +316,6 @@ class UmaService {
     return response
   }
 
-  /**
-   * Legacy pay response (for backwards compatibility)
-   */
-  async generatePayResponseLegacy (username, amountMsats, nonce, currency, settlementLayer, assetIdentifier) {
-    const defaultDomain = domainService.getDefaultDomain()
-    if (!defaultDomain) {
-      return null
-    }
-    return this.generatePayResponse(
-      username,
-      defaultDomain,
-      amountMsats,
-      nonce,
-      currency,
-      settlementLayer,
-      assetIdentifier
-    )
-  }
 
   /**
    * Generate Lightning invoice using Spark SDK
